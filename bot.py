@@ -8,6 +8,7 @@ Some code in this file is licensed under the Apache License, Version 2.0.
 
 from irc.bot import SingleServerIRCBot
 from requests import get
+from lib import cmds
 import json, urllib.request
 
 with open('./config.json') as data:
@@ -20,33 +21,38 @@ class Bot(SingleServerIRCBot):
       self.USERNAME = config['nickname'].lower()
       self.CLIENT_ID = config['client_id']
       self.TOKEN = config['tmi_token']
-      self.CHANNEL = config['channel']
+      self.CHANNEL = f"#{config['channel'].lower()}"
 
       # Get channel ID
-      url = 'https://api.twitch.tv/helix/users?login=will_am_I_'
+      url = 'https://api.twitch.tv/helix/users?login=will_am_i_'
       header = {'Client-ID': config['client_id'], 'Authorization': 'Bearer ' + config['twitch_token']}
       request = urllib.request.Request(url, headers=header)
       with urllib.request.urlopen(request) as userurl:
          userinfo = json.loads(userurl.read().decode())['data'][0]
       self.CHANNEL_ID = userinfo['id']
+      print(self.CHANNEL_ID + " " + self.CHANNEL)
 
       super().__init__([(self.HOST, self.PORT, f"oauth:{self.TOKEN}")], self.USERNAME, self.USERNAME)
 
    def on_welcome(self, cxn, event):
-      for request in ("membership", "tags", "commands"):
-         cxn.cap("REQ", f":twitch.tv/{request}")
+      for req in ("membership", "tags", "commands"):
+         cxn.cap("REQ", f":twitch.tv/{req}")
 
       cxn.join(self.CHANNEL)
-      self.send_message("Now online.")
+      self.send_message("Hello Everyone!! HeyGuys")
+      print("Now online.")
 
    def on_pubmsg(self, cxn, event):
       tags = {kvpair["key"]: kvpair["value"] for kvpair in event.tags}
       user = {"name": tags["display-name"], "id": tags["user-id"]}
       message = event.arguments[0]
 
+      if user["name"] != self.USERNAME:
+         cmds.process(bot, user, message)
+
       print(f"Message from {user['name']}: {message}")
 
-   def send_message(self, message)
+   def send_message(self, message):
       self.connection.privmsg(self.CHANNEL, message)
 
 if __name__ == "__main__":
