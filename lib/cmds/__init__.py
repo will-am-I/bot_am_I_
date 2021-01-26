@@ -7,7 +7,9 @@ cmds = {
           "hello": misc.hello,
           #"test":  misc.test,
           "discord": misc.discord,
-          #"uptime": misc.uptime
+          "uptime": misc.uptime
+          #"wr": misc.wr,
+          #"pb": misc.pb
        }
 
 def process(bot, user, message):
@@ -25,4 +27,4 @@ def perform(bot, user, cmd, *args):
    if cmd == "help":
       misc.help(bot, PREFIX, cmds)
    else:
-      bot.send_message(f"{user['name']}, \"{cmd}\" isn't a registered command.")
+      bot.send_message(f"{user['name']}, \"{cmd}\" isn't a registered command. NotLikeThis Type !help for a list of commands.")

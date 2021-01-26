@@ -9,6 +9,7 @@ Some code in this file is licensed under the Apache License, Version 2.0.
 from irc.bot import SingleServerIRCBot
 from requests import get
 from lib import cmds
+from lib.cmds import db, react
 import json, urllib.request
 
 with open('./config.json') as data:
@@ -39,15 +40,18 @@ class Bot(SingleServerIRCBot):
          cxn.cap("REQ", f":twitch.tv/{req}")
 
       cxn.join(self.CHANNEL)
+      db.build()
       self.send_message("Hello Everyone!! HeyGuys")
       print("Now online.")
 
+   @db.with_commit
    def on_pubmsg(self, cxn, event):
       tags = {kvpair["key"]: kvpair["value"] for kvpair in event.tags}
       user = {"name": tags["display-name"], "id": tags["user-id"]}
       message = event.arguments[0]
 
       if user["name"] != self.USERNAME:
+         react.process(bot, user, message)
          cmds.process(bot, user, message)
 
       print(f"Message from {user['name']}: {message}")
