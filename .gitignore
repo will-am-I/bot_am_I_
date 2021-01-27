@@ -125,3 +125,4 @@ dmypy.json
 
 *.json
 *.bat
+*.db

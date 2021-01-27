@@ -4,17 +4,27 @@ from datetime import datetime
 with open('./config.json') as data:
    config = json.load(data)
 
-def games(arg):
-   switcher = {"New Super Lucky's Tale": "o1y97826",
-               "Yooka-Laylee": "m1zz5210",
-               "Star Wars: Knights of the Old Republic": "9dokkk1p",
-               "Yoku's Island Express": "9dowj231",
-               "Lego Island 2 The Brickster's Revenge": "36935g6l"}
-   
-   return switcher.get(arg, "Unavailable")
-
-def help(bot, prefix, cmds):
-   bot.send_message("Registered command: " + ", ".join([f"{prefix}{cmd}" for cmd in sorted(cmds.keys())]))
+def help(bot, prefix, cmds, command=None, *args):
+   if command is None:
+      bot.send_message("Registered commands: " + ", ".join([f"{prefix}{cmd.callables[0]}" for cmd in cmds]) + " (type !help <command> for more info on each one)")# in sorted(cmds, key=lambda cmd: cmd.callables[0])]))
+   elif command == "hello":
+      bot.send_message("Hello command can be called using !hello, !hi, or !hey. I will simply say hello back.")
+   elif command == "discord":
+      bot.send_message("Discord command posts a link to Will's discord server.")
+   elif command == "uptime":
+      bot.send_message("Uptime command displays how long Will has been live.")
+   elif command == "coins":
+      bot.send_message("Coins command will tell you how many coins you have.")
+   elif command == "coinflip":
+      bot.send_message("Coinflip command can be called with !coinflip, !flipcoin, or !flip followed by \"heads\" (or 'h') or \"tails\" (or 't'), for example (!coinflip tails). It costs 1 coin to play and you win 10 if you guess correctly.")
+   elif command == "heist":
+      bot.send_message("Heist command can be called using !heist <bet>. Enter the number of coins to wager and the heist will start after 1 minute. Anyone may join using !heist <bet> and increase the chances of everyone winning. You will receive 1.5 times what is wagered if you win.")
+   elif command == "wr":
+      bot.send_message("WR command will display the current world record of the game, category, and possible subcategories of the game Will is currently running.")
+   elif command == "pb":
+      bot.send_message("PB command will display Will's current personal best time in the game, category, and possible subcategories of the game he is running.")
+   else:
+      bot.send_message("That is not a known command.")
 
 def hello(bot, user, *args):
    bot.send_message(f"Hello {user['name']}! VoHiYo")
@@ -39,27 +49,3 @@ def uptime(bot, user, *args):
       bot.send_message(f"Thanks for asking, {user['name']}. Will has been live for {uptime}.")
    else:
       bot.send_message(f"Sorry, {user['name']}, but Will isn't live right now.. obviously.. ResidentSleeper")
-
-def wr(bot, user, *args):
-   bot.send_message("WR")
-
-def pb(bot, user, *args):
-   url = 'https://api.twitch.tv/helix/streams?user_login=will_am_i_'
-   header = {'Client-ID': config['client_id'], 'Authorization': 'Bearer ' + config['twitch_token']}
-   request = urllib.request.Request(url, headers=header)
-   with urllib.request.urlopen(request) as streamurl:
-      streaminfo = json.loads(streamurl.read().decode())
-
-   if (streaminfo['data']):
-      gameid = streaminfo['data'][0]['game_id']
-      request = urllib.request.Request('https://api.twitch.tv/helix/games?id=' + gameid, headers=header)
-      with urllib.request.urlopen(request) as gameurl:
-         game = json.loads(gameurl.read().decode())['data'][0]['name']
-
-      if (games(game) != "Unavailable"):
-         title = streaminfo['data'][0]['title']
-         category = title[title.find("{")+1:title.find("}")]
-         subcategories = category[category.find("[")+1:category.find("]")].split(",")
-         category = category[:category.find("[")-1]
-   else:
-      bot.send_message("Sorry, Will is offline so there is no game to look for.")

@@ -1,16 +1,31 @@
 from time import time
-from . import misc
+
+from . import misc, economy, games, speedrun
 
 PREFIX = "!"
 
-cmds = {
-          "hello": misc.hello,
-          #"test":  misc.test,
-          "discord": misc.discord,
-          "uptime": misc.uptime
-          #"wr": misc.wr,
-          #"pb": misc.pb
-       }
+class Cmd(object):
+   def __init__(self, callables, func, cooldown=0):
+      self.callables = callables
+      self.func = func
+      self.cooldown = cooldown
+      self.next_use = time()
+
+cmds = [
+          #misc
+          Cmd(["hello", "hi", "hey"], misc.hello, cooldown=15),
+          Cmd(["discord"], misc.discord),
+          Cmd(["uptime"], misc.uptime, cooldown=15),
+          #economy
+          Cmd(["coins", "money"], economy.coins),
+          #games
+          Cmd(["coinflip", "flipcoin", "flip"], games.coinflip),
+          Cmd(["heist"], games.start_heist),
+          #speedrun
+          Cmd(["wr"], speedrun.wr),
+          Cmd(["pb"], speedrun.pb),
+          Cmd(["category"], speedrun.category)
+       ]
 
 def process(bot, user, message):
    if message.startswith(PREFIX):
@@ -18,13 +33,17 @@ def process(bot, user, message):
       args = message.split(" ")[1:]
       perform(bot, user, cmd, *args)
 
-def perform(bot, user, cmd, *args):
-   for name, func in cmds.items():
-      if cmd == name:
-         func(bot, user, *args)
-         return
-
-   if cmd == "help":
-      misc.help(bot, PREFIX, cmds)
+def perform(bot, user, call, *args):
+   if call in ("help", "commands", "cmds"):
+      misc.help(bot, PREFIX, cmds, *args)
    else:
+      for cmd in cmds:
+         if call in cmd.callables:
+            if time() > cmd.next_use:
+               cmd.func(bot, user, *args)
+               cmd.next_use = time() + cmd.cooldown
+            else:
+               bot.send_message(f"Cooldown still in effect. Try again in {cmd.next_use-time():,.0f} seconds.")
+            return
+
       bot.send_message(f"{user['name']}, \"{cmd}\" isn't a registered command. NotLikeThis Type !help for a list of commands.")
