@@ -66,6 +66,7 @@ def wr(bot, user, *args):
          records.sort(key=sortTime)
          currentwr = records[0]
       else:
+         variablecount = 0
          currentwr = leaderboard['runs'][0]
 
       wrtime = currentwr['run']['times']['primary_t']
@@ -76,6 +77,19 @@ def wr(bot, user, *args):
             player = player + json.loads(playerinfo.read().decode())['data']['names']['international'] + " and "
       player = player[:-5]
       
+      category = runinfo[1]
+      if variablecount > 0:
+         category = category + " ("
+         if runinfo[4] is not None:
+            category = category + runinfo[3] + ", "
+         elif runinfo[6] is not None:
+            category = category + runinfo[5] + ", "
+         elif runinfo[8] is not None:
+            category = category + runinfo[7] + ", "
+         elif runinfo[10] is not None:
+            category = category + runinfo[9] + ", "
+         category = category[:-2] + ")"
+
       bot.send_message(f"The current WR in {game} - {category} is {parseTime(wrtime)} by {player}")
    elif game == "Offline":
       bot.send_message("Will is currently offline and not running anything.")
@@ -86,28 +100,32 @@ def pb(bot, user, *args):
    if game := getGame() == db.field("SELECT GameName FROM speedrun"):
       runinfo = db.record("SELECT CategoryName, CategoryID, SubcategoryName1, SubcategoryID1, SubcategoryName2, SubcategoryID2, SubcategoryName3, SubcategoryID3, SubcategoryName4, SubcategoryID4 FROM speedrun")
 
+      hasPB = False
       with urllib.request.urlopen('https://www.speedrun.com/api/v1/users/18q2o608/personal-bests') as pbjson:
          records = json.loads(pbjson.read().decode())
       for record in records:
          if record['run']['category'] == runinfo[1]:
             pbtime = record['run']['times']['primary_t']
             variables = record['run']['values']
+            hasPB = True
       
       category = runinfo[0]
       if len(variables) > 0:
          category = category + " ("
-         for variable in variables:
-            if runinfo[3] == variable:
-               category = category + runinfo[2] + ", "
-            elif runinfo[5] == variable:
-               category = category + runinfo[4] + ", "
-            elif runinfo[7] == variable:
-               category = category + runinfo[6] + ", "
-            elif runinfo[9] == variable:
-               category = category + runinfo[8] + ", "
+         if runinfo[3] is not None:
+            category = category + runinfo[2] + ", "
+         elif runinfo[5] is not None:
+            category = category + runinfo[4] + ", "
+         elif runinfo[7] is not None:
+            category = category + runinfo[6] + ", "
+         elif runinfo[9] is not None:
+            category = category + runinfo[8] + ", "
          category = category[:-2] + ")"
-      
-      bot.send_message(f"Will's current PB in {game} - {category} is {parseTime(pbtime)}")
+         
+      if hasPB:
+         bot.send_message(f"Will's current PB in {game} - {category} is {parseTime(pbtime)}")
+      else:
+         bot.send_message(f"Will currently does not have a time on the leaderboard for {game} - {category}")
    elif game == "Offline":
       bot.send_message("Will is currently offline and not running anything.")
    else:
