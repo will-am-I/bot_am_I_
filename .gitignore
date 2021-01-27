@@ -128,3 +128,4 @@ dmypy.json
 *.db
 *.db
 files/database.db
+files/src_ids.txt
