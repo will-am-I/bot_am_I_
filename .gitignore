@@ -126,3 +126,5 @@ dmypy.json
 *.json
 *.bat
 *.db
+*.db
+files/database.db
