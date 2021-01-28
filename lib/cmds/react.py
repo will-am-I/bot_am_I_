@@ -59,4 +59,4 @@ def check_activity(bot, user):
       bot.send_message(f"Thanks for being active in chat, {user['name']}. You've sent {count:,} messages! Keep it up! PogChamp")
 
 def thank_for_cheer(bot, user, match):
-   bot.send_message(f"Thanks for the {match.string[5:]:,} bitties, {user['name']}! It's much appreciated!")
+   bot.send_message(f"Thanks for the {match[5:]:,} bitties, {user['name']}! It's much appreciated!")

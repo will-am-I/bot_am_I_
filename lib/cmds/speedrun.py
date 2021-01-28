@@ -39,7 +39,7 @@ def category(bot, user, categoryid=None, subcategoryid1=None, subcategoryid2=Non
          db.execute("INSERT INTO speedrun (GameName, GameID, CategoryName, CategoryID, SubcategoryName1, SubcategoryID1, SubcategoryName2, SubcategoryID2, SubcategoryName3, SubcategoryID3, SubcategoryName4, SubcategoryID4) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", gamename, gameid, categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4)
 
 def wr(bot, user, *args):
-   if game := getGame() == db.field("SELECT GameName FROM speedrun"):
+   if (game := getGame()) == db.field("SELECT GameName FROM speedrun"):
       runinfo = db.record("SELECT GameID, CategoryName, CategoryID, SubcategoryName1, SubcategoryID1, SubcategoryName2, SubcategoryID2, SubcategoryName3, SubcategoryID3, SubcategoryName4, SubcategoryID4 FROM speedrun")
 
       with urllib.request.urlopen(f'https://www.speedrun.com/api/v1/leaderboards/{runinfo[0]}/category/{runinfo[2]}') as leaderboardjson:
@@ -71,11 +71,11 @@ def wr(bot, user, *args):
 
       wrtime = currentwr['run']['times']['primary_t']
 
-      player = ""
+      players = []
       for player in currentwr['run']['players']:
          with urllib.request.urlopen(player['uri']) as playerinfo:
-            player = player + json.loads(playerinfo.read().decode())['data']['names']['international'] + " and "
-      player = player[:-5]
+            players.append(json.loads(playerinfo.read().decode())['data']['names']['international'])
+      player = ", ".join([player for player in players])
       
       category = runinfo[1]
       if variablecount > 0:
@@ -97,12 +97,12 @@ def wr(bot, user, *args):
       bot.send_message("Will is not currently running this game.")
 
 def pb(bot, user, *args):
-   if game := getGame() == db.field("SELECT GameName FROM speedrun"):
+   if (game := getGame()) == db.field("SELECT GameName FROM speedrun"):
       runinfo = db.record("SELECT CategoryName, CategoryID, SubcategoryName1, SubcategoryID1, SubcategoryName2, SubcategoryID2, SubcategoryName3, SubcategoryID3, SubcategoryName4, SubcategoryID4 FROM speedrun")
 
       hasPB = False
       with urllib.request.urlopen('https://www.speedrun.com/api/v1/users/18q2o608/personal-bests') as pbjson:
-         records = json.loads(pbjson.read().decode())
+         records = json.loads(pbjson.read().decode())['data']
       for record in records:
          if record['run']['category'] == runinfo[1]:
             pbtime = record['run']['times']['primary_t']
@@ -160,17 +160,17 @@ def parseTime(time_to_parse):
    
    if hr == 0:
       if min == 0:
-         time = f'{sec}.{ms}'
+         time = f'{sec:02}.{ms:02}'
       else:
-         time = f'{min}:{sec}'
+         time = f'{min}:{sec:02}'
          
          if ms > 0:
-            time = time + f'.{ms}'
+            time = time + f'.{ms:02}'
    else:
-      time = f'{hr}:{min}:{sec}'
+      time = f'{hr}:{min:02}:{sec:02}'
       
       if ms > 0:
-         time = time + f'.{ms}'
+         time = time + f'.{ms:02}'
 
    return time
 
