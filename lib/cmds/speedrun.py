@@ -112,6 +112,7 @@ def pb(bot, user, *args):
    if (game := getGame()) == db.field("SELECT GameName FROM speedrun"):
       runinfo = db.record("SELECT CategoryName, CategoryID, SubcategoryName1, SubcategoryID1, SubcategoryName2, SubcategoryID2, SubcategoryName3, SubcategoryID3, SubcategoryName4, SubcategoryID4 FROM speedrun")
 
+      variables = []
       hasPB = False
       with urllib.request.urlopen('https://www.speedrun.com/api/v1/users/18q2o608/personal-bests') as pbjson:
          records = json.loads(pbjson.read().decode())['data']
@@ -132,16 +133,17 @@ def pb(bot, user, *args):
                pbtime = record['run']['times']['primary_t']
                hasPB = True
       
-      category = runinfo[0] + " ("
-      if runinfo[3] is not None:
-         category = category + runinfo[2] + ", "
-      if runinfo[5] is not None:
-         category = category + runinfo[4] + ", "
-      if runinfo[7] is not None:
-         category = category + runinfo[6] + ", "
-      if runinfo[9] is not None:
-         category = category + runinfo[8] + ", "
-      category = category[:-2] + ")"
+      if len(variables) > 0:
+         category = runinfo[0] + " ("
+         if runinfo[3] is not None:
+            category = category + runinfo[2] + ", "
+         if runinfo[5] is not None:
+            category = category + runinfo[4] + ", "
+         if runinfo[7] is not None:
+            category = category + runinfo[6] + ", "
+         if runinfo[9] is not None:
+            category = category + runinfo[8] + ", "
+         category = category[:-2] + ")"
          
       if hasPB:
          bot.send_message(f"Will's current PB in {game} - {category} is {parseTime(pbtime)}")
