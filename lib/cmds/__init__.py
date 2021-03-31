@@ -46,4 +46,4 @@ def perform(bot, user, call, *args):
                bot.send_message(f"Cooldown still in effect. Try again in {cmd.next_use-time():,.0f} seconds.")
             return
 
-      bot.send_message(f"{user['name']}, \"{cmd}\" isn't a registered command. NotLikeThis Type !help for a list of commands.")
+      bot.send_message(f"@{user['name']}, \"{call}\" isn't a registered command. NotLikeThis Type !help for a list of commands.")
