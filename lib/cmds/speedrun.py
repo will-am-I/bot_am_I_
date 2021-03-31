@@ -19,24 +19,35 @@ def category(bot, user, categoryid=None, subcategoryid1=None, subcategoryid2=Non
          gamename = gameinfo['names']['twitch']
          gameid = gameinfo['id']
 
+         confirmation = f"Category set to {gamename} - {categoryname}"
+
          subcategoryname1 = None
          subcategoryname2 = None
          subcategoryname3 = None
          subcategoryname4 = None
          if subcategoryid1 is not None:
+            confirmation += " ("
             with urllib.request.urlopen(f'https://www.speedrun.com/api/v1/categories/{categoryid}/variables') as variablesjson:
                variablesinfo = json.loads(variablesjson.read().decode())['data']
             for variable in variablesinfo:
                if subcategoryid1 in variable['values']['values']:
                   subcategoryname1 = variable['values']['values'][subcategoryid1]['label']
-               elif subcategoryid2 is not None and subcategoryid2 in variable['values']['values']:
+                  confirmation += f"{subcategoryname1}, "
+               if subcategoryid2 is not None and subcategoryid2 in variable['values']['values']:
                   subcategoryname2 = variable['values']['values'][subcategoryid2]['label']
-               elif subcategoryid3 is not None and subcategoryid3 in variable['values']['values']:
+                  confirmation += f"{subcategoryname2}, "
+               if subcategoryid3 is not None and subcategoryid3 in variable['values']['values']:
                   subcategoryname3 = variable['values']['values'][subcategoryid3]['label']
-               elif subcategoryid4 is not None and subcategoryid4 in variable['values']['values']:
+                  confirmation += f"{subcategoryname3}, "
+               if subcategoryid4 is not None and subcategoryid4 in variable['values']['values']:
                   subcategoryname4 = variable['values']['values'][subcategoryid4]['label']
+                  confirmation += f"{subcategoryname4}, "
+            confirmation = f"{confirmation[:-2]})"
 
          db.execute("INSERT INTO speedrun (GameName, GameID, CategoryName, CategoryID, SubcategoryName1, SubcategoryID1, SubcategoryName2, SubcategoryID2, SubcategoryName3, SubcategoryID3, SubcategoryName4, SubcategoryID4) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", gamename, gameid, categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4)
+         bot.send_message(confirmation)
+      else:
+         bot.send_message("Category set to NONE")
 
 def wr(bot, user, *args):
    if (game := getGame()) == db.field("SELECT GameName FROM speedrun"):
@@ -44,7 +55,7 @@ def wr(bot, user, *args):
 
       with urllib.request.urlopen(f'https://www.speedrun.com/api/v1/leaderboards/{runinfo[0]}/category/{runinfo[2]}') as leaderboardjson:
          leaderboard = json.loads(leaderboardjson.read().decode())['data']
-
+      
       if runinfo[4] is not None:
          variablecount = 1
          if runinfo[6] is not None:
@@ -57,7 +68,8 @@ def wr(bot, user, *args):
          records = []
          for record in leaderboard['runs']:
             matchcount = 0
-            for variable in record['run']['values']:
+            for value in record['run']['values']:
+               variable = record['run']['values'][value]
                if variable == runinfo[4] or variable == runinfo[6] or variable == runinfo[8] or variable == runinfo[10]:
                   matchcount += 1
             if matchcount == variablecount:
@@ -105,22 +117,31 @@ def pb(bot, user, *args):
          records = json.loads(pbjson.read().decode())['data']
       for record in records:
          if record['run']['category'] == runinfo[1]:
-            pbtime = record['run']['times']['primary_t']
-            variables = record['run']['values']
-            hasPB = True
+            variables = []
+            matchcount = 0
+            
+            for value in record['run']['values']:
+               with urllib.request.urlopen(f'https://www.speedrun.com/api/v1/variables/{value}') as valuejson:
+                  issubcategory = json.loads(valuejson.read().decode())['data']['is-subcategory']
+               if issubcategory == True:
+                  variables.append(record['run']['values'][value])
+            for variable in variables:
+               if variable == runinfo[3] or variable == runinfo[5] or variable == runinfo[7] or variable == runinfo[9]:
+                  matchcount += 1
+            if matchcount == len(variables):
+               pbtime = record['run']['times']['primary_t']
+               hasPB = True
       
-      category = runinfo[0]
-      if len(variables) > 0:
-         category = category + " ("
-         if runinfo[3] is not None:
-            category = category + runinfo[2] + ", "
-         elif runinfo[5] is not None:
-            category = category + runinfo[4] + ", "
-         elif runinfo[7] is not None:
-            category = category + runinfo[6] + ", "
-         elif runinfo[9] is not None:
-            category = category + runinfo[8] + ", "
-         category = category[:-2] + ")"
+      category = runinfo[0] + " ("
+      if runinfo[3] is not None:
+         category = category + runinfo[2] + ", "
+      if runinfo[5] is not None:
+         category = category + runinfo[4] + ", "
+      if runinfo[7] is not None:
+         category = category + runinfo[6] + ", "
+      if runinfo[9] is not None:
+         category = category + runinfo[8] + ", "
+      category = category[:-2] + ")"
          
       if hasPB:
          bot.send_message(f"Will's current PB in {game} - {category} is {parseTime(pbtime)}")

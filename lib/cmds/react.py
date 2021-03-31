@@ -54,9 +54,10 @@ def say_goodbye(bot, user):
 
 def check_activity(bot, user):
    messages[user['id']] += 1
+   count = messages[user['id']]
 
-   if (count := messages[user['id']]) % 25 == 0:
-      bot.send_message(f"Thanks for being active in chat, {user['name']}. You've sent {count:,} messages! Keep it up! PogChamp")
+   if (count % 50 == 0 and count <= 200) or (count % 500 == 0):
+      bot.send_message(f"Thanks for being active in chat, {user['name']}. You've sent {count:,} messages! Keep it up!")
 
 def thank_for_cheer(bot, user, match):
    bot.send_message(f"Thanks for the {match[5:]:,} bitties, {user['name']}! It's much appreciated!")
