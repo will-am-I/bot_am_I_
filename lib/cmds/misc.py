@@ -32,6 +32,9 @@ def hello(bot, user, *args):
 def test(bot, user, *args):
    bot.send_message("Testing, testing 1-2-3")
 
+def nsfw(bot, user, *args):
+   bot.send_message("Check this out ;) https://matias.ma/nsfw/")
+
 def discord(bot, user, *args):
    bot.send_message("Join the discord! Keep up with all my speedrunning shenanigans as well as hang out with this goofy bunch at https://discord.gg/HVpSXUk")
 

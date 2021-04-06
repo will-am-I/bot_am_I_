@@ -13,9 +13,10 @@ class Cmd(object):
 
 cmds = [
           #misc
-          Cmd(["hello", "hi", "hey"], misc.hello, cooldown=15),
+          Cmd(["hello", "hi", "hey"], misc.hello),
           Cmd(["discord"], misc.discord),
           Cmd(["uptime"], misc.uptime, cooldown=15),
+          Cmd(["nsfw"], misc.nsfw),
           #economy
           Cmd(["coins", "money"], economy.coins),
           #games

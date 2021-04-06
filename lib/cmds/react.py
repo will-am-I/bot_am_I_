@@ -5,24 +5,30 @@ from random import randint
 from time import time
 import json
 
-from . import db, games
+from . import db, games, misc
 
 with open('./config.json') as data:
    config = json.load(data)
 
 welcomed = []
 messages = defaultdict(int)
+#totalmessages = 0
 
 def process(bot, user, message):
+   #totalmessages = totalmessages
    if user['id'] != config['streamer']:
       update_records(bot, user)
 
       if user['id'] not in welcomed:
          welcome(bot, user)
-      elif "bye" in message:
-         say_goodbye(bot, user)
+      #elif "bye" in message or "see ya" in message:
+         #say_goodbye(bot, user)
 
       check_activity(bot, user)
+
+      #totalmessages += 1
+      #if totalmessages % 50 == 0:
+         #misc.discord(bot, user)
 
       if (match := search(r'cheer[0-9]+', message)) is not None:
          thank_for_cheer(bot, user, match)

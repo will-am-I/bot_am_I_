@@ -1,6 +1,6 @@
 from sqlite3 import connect
 
-cxn = connect("./files/database.db", check_same_thread=False)
+cxn = connect("../database/database.db", check_same_thread=False)
 cur = cxn.cursor()
 
 def with_commit(func):

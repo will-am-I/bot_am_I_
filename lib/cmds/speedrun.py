@@ -50,7 +50,7 @@ def category(bot, user, categoryid=None, subcategoryid1=None, subcategoryid2=Non
          bot.send_message("Category set to NONE")
 
 def wr(bot, user, *args):
-   if (game := getGame()) == db.field("SELECT GameName FROM speedrun"):
+   if (game := getGame()).upper() == db.field("SELECT GameName FROM speedrun").upper():
       runinfo = db.record("SELECT GameID, CategoryName, CategoryID, SubcategoryName1, SubcategoryID1, SubcategoryName2, SubcategoryID2, SubcategoryName3, SubcategoryID3, SubcategoryName4, SubcategoryID4 FROM speedrun")
 
       with urllib.request.urlopen(f'https://www.speedrun.com/api/v1/leaderboards/{runinfo[0]}/category/{runinfo[2]}') as leaderboardjson:
@@ -85,8 +85,11 @@ def wr(bot, user, *args):
 
       players = []
       for player in currentwr['run']['players']:
-         with urllib.request.urlopen(player['uri']) as playerinfo:
-            players.append(json.loads(playerinfo.read().decode())['data']['names']['international'])
+         if player['rel'] == "user":
+            with urllib.request.urlopen(player['uri']) as playerinfo:
+               players.append(json.loads(playerinfo.read().decode())['data']['names']['international'])
+         else:
+            players.append(player['name'])
       player = ", ".join([player for player in players])
       
       category = runinfo[1]
@@ -109,7 +112,7 @@ def wr(bot, user, *args):
       bot.send_message("Will is not currently running this game.")
 
 def pb(bot, user, *args):
-   if (game := getGame()) == db.field("SELECT GameName FROM speedrun"):
+   if (game := getGame()).upper() == db.field("SELECT GameName FROM speedrun").upper():
       runinfo = db.record("SELECT CategoryName, CategoryID, SubcategoryName1, SubcategoryID1, SubcategoryName2, SubcategoryID2, SubcategoryName3, SubcategoryID3, SubcategoryName4, SubcategoryID4 FROM speedrun")
 
       variables = []
@@ -133,16 +136,17 @@ def pb(bot, user, *args):
                pbtime = record['run']['times']['primary_t']
                hasPB = True
       
+      category = runinfo[0]
       if len(variables) > 0:
-         category = runinfo[0] + " ("
-         if runinfo[3] is not None:
-            category = category + runinfo[2] + ", "
-         if runinfo[5] is not None:
-            category = category + runinfo[4] + ", "
-         if runinfo[7] is not None:
-            category = category + runinfo[6] + ", "
-         if runinfo[9] is not None:
-            category = category + runinfo[8] + ", "
+         category = category + " ("
+         if runinfo[4] is not None:
+            category = category + runinfo[3] + ", "
+         elif runinfo[6] is not None:
+            category = category + runinfo[5] + ", "
+         elif runinfo[8] is not None:
+            category = category + runinfo[7] + ", "
+         elif runinfo[10] is not None:
+            category = category + runinfo[9] + ", "
          category = category[:-2] + ")"
          
       if hasPB:
@@ -166,6 +170,7 @@ def getGame():
       request = urllib.request.Request('https://api.twitch.tv/helix/games?id=' + gameid, headers=header)
       with urllib.request.urlopen(request) as gameurl:
          game = json.loads(gameurl.read().decode())['data'][0]['name']
+      print(game)
    else:
       game = "Offline"
 
