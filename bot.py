@@ -8,6 +8,7 @@ Some code in this file is licensed under the Apache License, Version 2.0.
 
 from irc.bot import SingleServerIRCBot
 from requests import get
+from lib import cmds
 from lib.cmds import db, react
 import json, urllib.request
 
