@@ -126,4 +126,3 @@ dmypy.json
 *.json
 *.bat
 files/src_ids.txt
-database.db
