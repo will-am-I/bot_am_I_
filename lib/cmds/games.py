@@ -23,11 +23,11 @@ def coinflip(bot, user, side=None, bet=1, *args):
             result = choice(("heads", "tails"))
             
             if side[0] == result[0]:
-               cursor.execute(f"UPDATE member_points SET coins = coins + {bet} WHERE twitchid = '{user['id']}'")
-               bot.send_message(f"It landed on {result}! You won 10 coins!")
+               cursor.execute(f"UPDATE member_points SET coins = coins + {bet} WHERE twitchid = {user['id']}")
+               bot.send_message(f"It landed on {result}! You won {bet} coins!")
             else:
-               cursor.execute(f"UPDATE member_points SET coins = coins - {bet} WHERE twitchid = '{user['id']}'")
-               bot.send_message(f"Sorry, it landed on {result}. You lost 1 coin.")
+               cursor.execute(f"UPDATE member_points SET coins = coins - {bet} WHERE twitchid = {user['id']}")
+               bot.send_message(f"Sorry, it landed on {result}. You lost {bet} coin.")
       else:
          bot.send_message(f"Sorry, {user['name']}. You need at least 1 coin to play the coinflip. Participate in chat to earn free coins.")
       db.commit()

@@ -32,16 +32,16 @@ def update_records(bot, user):
    cursor = db.cursor()
 
    try:
-      cursor.execute(f"UPDATE twitch_users SET messages = messages + 1 WHERE userid = '{user['id']}'")
+      cursor.execute(f"UPDATE twitch_users SET messages = messages + 1 WHERE userid = {user['id']}")
 
-      cursor.execute(f"INSERT IGNORE INTO member_rank (twitchid, coins, coinlock) VALUES ('{user['id']}', {randint(1,5)}, NOW())")
-      cursor.execute(f"UPDATE member_rank SET points = points + 1 WHERE twitchid = '{user['id']}'")
+      cursor.execute(f"INSERT IGNORE INTO member_rank (twitchid, coins, coinlock) VALUES ({user['id']}, {randint(1,5)}, NOW())")
+      cursor.execute(f"UPDATE member_rank SET points = points + 1 WHERE twitchid = {user['id']}")
 
-      cursor.execute(f"SELECT DATE_FORMAT(coinlock, '%Y-%m-%d %T') FROM member_rank WHERE twitchid = '{user['id']}'")
+      cursor.execute(f"SELECT DATE_FORMAT(coinlock, '%Y-%m-%d %T') FROM member_rank WHERE twitchid = {user['id']}")
       stamp = cursor.fetchone()
       if datetime.strptime(stamp, "%Y-%m-%d %H:%M:%S") < datetime.utcnow():
          coinlock = (datetime.utcnow() + timedelta(seconds=30)).strftime("%Y-%m-%d %H:%M:%S")
-         cursor.execute(f"UPDATE member_rank SET coins = coins + {randint(1,5)}, coinlock = STR_TO_DATE('{coinlock}', '%Y-%m-%d %T') WHERE twitchid = '{user['id']}'")
+         cursor.execute(f"UPDATE member_rank SET coins = coins + {randint(1,5)}, coinlock = STR_TO_DATE('{coinlock}', '%Y-%m-%d %T') WHERE twitchid = {user['id']}")
       
       db.commit()
    except Exception as e:
