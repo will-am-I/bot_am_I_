@@ -6,7 +6,7 @@ with open('./config.json') as data:
 
 def help(bot, prefix, cmds, command=None, *args):
    if command is None:
-      bot.send_message("Registered commands: " + ", ".join([f"{prefix}{cmd.callables[0]}" for cmd in cmds]) + " (type !help <command> for more info on each one)")# in sorted(cmds, key=lambda cmd: cmd.callables[0])]))
+      bot.send_message("Registered commands: " + ", ".join([f"{prefix}{cmd.callables[0]}" for cmd in cmds if cmd != "category"]) + " (type !help <command> for more info on each one)")# in sorted(cmds, key=lambda cmd: cmd.callables[0])]))
    elif command == "hello":
       bot.send_message("Hello command can be called using !hello, !hi, or !hey. I will simply say hello back.")
    elif command == "discord":

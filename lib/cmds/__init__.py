@@ -19,9 +19,10 @@ cmds = [
           Cmd(["nsfw"], misc.nsfw),
           #economy
           Cmd(["coins", "money"], economy.coins),
+          #Cmd(["rank"], economy.rank),
           #games
           Cmd(["coinflip", "flipcoin", "flip"], games.coinflip),
-          Cmd(["heist"], games.start_heist),
+          #Cmd(["heist"], games.start_heist),
           #speedrun
           Cmd(["wr"], speedrun.wr),
           Cmd(["pb"], speedrun.pb),

@@ -1,28 +1,40 @@
 from random import choice, randint
 from time import time
+import MySQLdb, json
 
-from . import db
+with open('./config.json') as data:
+   config = json.load(data)
 
 heist = None
 heist_lock = time()
 
-def coinflip(bot, user, side=None, *args):
-   if int(db.field("SELECT Coins FROM users WHERE UserID = ?", user['id'])) > 0:
-      if side is None:
-         bot.send_message("Select which side you think the coin will land.")
-      elif (side := side.lower()) not in (opt := ("h", "t", "heads", "tails")):
-         bot.send_message("Enter one of the following as the side: " + ", ".join(opt))
-      else:
-         result = choice(("heads", "tails"))
-
-         if side[0] == result[0]:
-            db.execute("UPDATE users SET Coins = Coins + 10 WHERE UserID = ?", user['id'])
-            bot.send_message(f"It landed on {result}! You won 10 coins!")
+def coinflip(bot, user, side=None, bet=1, *args):
+   db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
+   cursor = db.cursor()
+   
+   try:
+      cursor.execute(f"SELECT coins FROM member_points WHERE twitchid = '{user['id']}'")
+      if int(cursor.fetchone()) > 0:
+         if side is None:
+            bot.send_message("Select which side you think the coin will land.")
+         elif (side := side.lower()) not in (opt := ("h", "t", "heads", "tails")):
+            bot.send_message("Enter one of the following as the side: " + ", ".join(opt))
          else:
-            db.execute("UPDATE users SET Coins = Coins - 1 WHERE UserID = ?", user['id'])
-            bot.send_message(f"Sorry, it landed on {result}. You lost 1 coin.")
-   else:
-      bot.send_message(f"Sorry, {user['name']}. You need at least 1 coin to play the coinflip. Participate in chat to earn free coins.")
+            result = choice(("heads", "tails"))
+            
+            if side[0] == result[0]:
+               cursor.execute(f"UPDATE member_points SET coins = coins + {bet} WHERE twitchid = '{user['id']}'")
+               bot.send_message(f"It landed on {result}! You won 10 coins!")
+            else:
+               cursor.execute(f"UPDATE member_points SET coins = coins - {bet} WHERE twitchid = '{user['id']}'")
+               bot.send_message(f"Sorry, it landed on {result}. You lost 1 coin.")
+      else:
+         bot.send_message(f"Sorry, {user['name']}. You need at least 1 coin to play the coinflip. Participate in chat to earn free coins.")
+      db.commit()
+   except Exception as e:
+      db.rollback()
+      bot.send_message("Error occurred during the coinflip.")
+      print(str(e))
 
 class Heist(object):
    def __init__(self):
@@ -50,10 +62,10 @@ class Heist(object):
          bot.send_message("A Heist is already in progress. You'll have to wait until the next one.")
       elif user in self.users:
          bot.send_message("You're already good to go.")
-      elif bet > (coins := db.field("SELECT Coins FROM users WHERE UserID = ?", user['id'])):
-         bot.send_message(f"You don't have that much to bet. You only have {coins:,} coins.")
+      #elif bet > (coins := db.field("SELECT Coins FROM users WHERE UserID = ?", user['id'])):
+         #bot.send_message(f"You don't have that much to bet. You only have {coins:,} coins.")
       else:
-         db.execute("UPDATE users SET Coins = Coins - ? WHERE UserID = ?", bet, user['id'])
+         #db.execute("UPDATE users SET Coins = Coins - ? WHERE UserID = ?", bet, user['id'])
          self.users.append((user, bet))
          bot.send_message("You're all suited and ready to go! Stand by for showtime...")
 
@@ -67,7 +79,7 @@ class Heist(object):
 
       for user, bet in self.users:
          if randint(0, len(self.users)):
-            db.execute("UPDATE users SET Coins = Coins + ? WHERE UserID = ?", bet*1.5, user['id'])
+            #db.execute("UPDATE users SET Coins = Coins + ? WHERE UserID = ?", bet*1.5, user['id'])
             succeeded.append((user, bet*1.5))
             bot.send_message(choice(self.messages["success"]).format(user['name']))
          else:

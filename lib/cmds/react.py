@@ -3,32 +3,20 @@ from re import search
 from datetime import datetime, timedelta
 from random import randint
 from time import time
-import json
+import json, MySQLdb
 
-from . import db, games, misc
+from . import games, misc
 
 with open('./config.json') as data:
    config = json.load(data)
 
-welcomed = []
 messages = defaultdict(int)
-#totalmessages = 0
 
 def process(bot, user, message):
-   #totalmessages = totalmessages
    if user['id'] != config['streamer']:
+      welcome(bot, user)
       update_records(bot, user)
-
-      if user['id'] not in welcomed:
-         welcome(bot, user)
-      #elif "bye" in message or "see ya" in message:
-         #say_goodbye(bot, user)
-
       check_activity(bot, user)
-
-      #totalmessages += 1
-      #if totalmessages % 50 == 0:
-         #misc.discord(bot, user)
 
       if (match := search(r'cheer[0-9]+', message)) is not None:
          thank_for_cheer(bot, user, match)
@@ -40,23 +28,46 @@ def process(bot, user, message):
             games.end_heist(bot)
 
 def update_records(bot, user):
-   db.execute("INSERT OR IGNORE INTO users (UserID) VALUES (?)", user['id'])
-   db.execute("UPDATE users SET MessagesSent = MessagesSent + 1 WHERE UserID = ?", user['id'])
+   db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
+   cursor = db.cursor()
 
-   stamp = db.field("SELECT CoinLock FROM users WHERE UserID = ?", user['id'])
+   try:
+      cursor.execute(f"UPDATE twitch_users SET messages = messages + 1 WHERE userid = '{user['id']}'")
 
-   if datetime.strptime(stamp, "%Y-%m-%d %H:%M:%S") < datetime.utcnow():
-      coinlock = (datetime.utcnow()+timedelta(seconds=60)).strftime("%Y-%m-%d %H:%M:%S")
+      cursor.execute(f"INSERT IGNORE INTO member_rank (twitchid, coins, coinlock) VALUES ('{user['id']}', {randint(1,5)}, NOW())")
+      cursor.execute(f"UPDATE member_rank SET points = points + 1 WHERE twitchid = '{user['id']}'")
 
-      db.execute("UPDATE users SET Coins = Coins + ?, CoinLock = ? WHERE UserID = ?", randint(1, 5), coinlock, user['id'])
+      cursor.execute(f"SELECT DATE_FORMAT(coinlock, '%Y-%m-%d %T') FROM member_rank WHERE twitchid = '{user['id']}'")
+      stamp = cursor.fetchone()
+      if datetime.strptime(stamp, "%Y-%m-%d %H:%M:%S") < datetime.utcnow():
+         coinlock = (datetime.utcnow() + timedelta(seconds=30)).strftime("%Y-%m-%d %H:%M:%S")
+         cursor.execute(f"UPDATE member_rank SET coins = coins + {randint(1,5)}, coinlock = STR_TO_DATE('{coinlock}', '%Y-%m-%d %T') WHERE twitchid = '{user['id']}'")
+      
+      db.commit()
+   except Exception as e:
+      db.rollback()
+      bot.send_message("Error occurred updating users.")
+      print(str(e))
+   
+   db.close()
 
 def welcome(bot, user):
-   bot.send_message(f"Welcome to the stream {user['name']}!")
-   welcomed.append(user['id'])
+   db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
+   cursor = db.cursor()
 
-def say_goodbye(bot, user):
-   bot.send_message(f"See ya later {user['name']}!")
-   welcomed.remove(user['id'])
+   try:
+      bot.send_message(f"Welcome to the stream {user['name']}!")
+      
+      cursor.execute(f"INSERT IGNORE INTO twitch_users (userid) VALUES ('{user['id']}')")
+      cursor.execute(f"UPDATE twitch_users SET welcomed = NOW() WHERE userid = '{user['id']}'")
+
+      db.commit()
+   except Exception as e:
+      db.rollback()
+      bot.send_message("Error occurred welcoming users.")
+      print(str(e))
+
+   db.close()
 
 def check_activity(bot, user):
    messages[user['id']] += 1
