@@ -62,7 +62,7 @@ def welcome(bot, user):
       if cursor.rowcount > 0:
          url = 'https://api.twitch.tv/helix/streams?user_login=will_am_i_'
          header = {'Client-ID': config['client_id'], 'Authorization': 'Bearer ' + config['twitch_token']}
-         request = urllib.request.Request(url, headers=header)
+         request = urllib.request.Request(url, headers=header, method="GET")
          with urllib.request.urlopen(request) as streamurl:
             streaminfo = json.loads(streamurl.read().decode())
          if (streaminfo['data']):

@@ -1,9 +1,3 @@
-import urllib.request, json, MySQLdb
-from datetime import datetime
-
-with open('./config.json') as data:
-   config = json.load(data)
-
 def help(bot, prefix, cmds, command=None, *args):
    if command is None:
       bot.send_message("Registered commands: " + ", ".join([f"{prefix}{cmd.callables[0]}" for cmd in cmds if cmd != "category"]) + " (type !help <command> for more info on each one)")# in sorted(cmds, key=lambda cmd: cmd.callables[0])]))
@@ -23,6 +17,8 @@ def help(bot, prefix, cmds, command=None, *args):
       bot.send_message("WR command will display the current world record of the game, category, and possible subcategories of the game Will is currently running.")
    elif command == "pb":
       bot.send_message("PB command will display Will's current personal best time in the game, category, and possible subcategories of the game he is running.")
+   elif command == "clip":
+      bot.send_message("Clip command will create a clip from the stream.")
    else:
       bot.send_message("That is not a known command.")
 
@@ -37,51 +33,3 @@ def nsfw(bot, user, *args):
 
 def discord(bot, user, *args):
    bot.send_message("Join the discord! Keep up with all my speedrunning shenanigans as well as hang out with this goofy bunch at https://discord.gg/HVpSXUk")
-
-def lurk(bot, user, *args):
-   db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
-   cursor = db.cursor()
-
-   try:
-      cursor.execute(f"UPDATE twitch_users SET lurking = 'Y' WHERE userid = {user['id']}")
-      db.commit()
-   except Exception as e:
-      db.rollback()
-      bot.send_message("Error occurred setting the lurking status.")
-      print(str(e))
-   else:
-      bot.send_message(f"Thanks for lurking {user['name']}! You can still receive points and coins now.")
-
-   db.close()
-
-def clearlurk(bot, user, *args):
-   if user['id'] == config['streamer']:
-      db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
-      cursor = db.cursor()
-
-      try:
-         cursor.execute("UPDATE twitch_users SET lurking = 'N' WHERE lurking = 'Y'")
-         db.commit()
-      except Exception as e:
-         db.rollback()
-         bot.send_message("Error occurred clearing lurkers.")
-         print(str(e))
-      else:
-         bot.send_message("All lurkers cleared.")
-
-      db.close()
-
-def uptime(bot, user, *args):
-   url = 'https://api.twitch.tv/helix/streams?user_login=will_am_i_'
-   header = {'Client-ID': config['client_id'], 'Authorization': 'Bearer ' + config['twitch_token']}
-   request = urllib.request.Request(url, headers=header)
-   with urllib.request.urlopen(request) as streamurl:
-      streaminfo = json.loads(streamurl.read().decode())
-
-   if (streaminfo['data']):
-      startTime = datetime.strptime(streaminfo['data'][0]['started_at'][:10] + ' ' + streaminfo['data'][0]['started_at'][11:-1], '%Y-%m-%d %H:%M:%S')
-      uptime = str(datetime.utcnow() - startTime).rsplit('.', 1)[0]
-
-      bot.send_message(f"Thanks for asking, {user['name']}. Will has been live for {uptime}.")
-   else:
-      bot.send_message(f"Sorry, {user['name']}, but Will isn't live right now.. obviously.. ResidentSleeper")

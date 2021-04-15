@@ -1,6 +1,6 @@
 from time import time
 
-from . import misc, economy, games, speedrun
+from . import misc, economy, games, speedrun, stream
 
 PREFIX = "!"
 
@@ -15,7 +15,6 @@ cmds = [
           #misc
           Cmd(["hello", "hi", "hey"], misc.hello),
           Cmd(["discord"], misc.discord),
-          Cmd(["uptime"], misc.uptime, cooldown=15),
           Cmd(["nsfw"], misc.nsfw),
           #economy
           Cmd(["coins", "money"], economy.coins),
@@ -27,9 +26,11 @@ cmds = [
           Cmd(["wr"], speedrun.wr),
           Cmd(["pb"], speedrun.pb),
           Cmd(["category"], speedrun.category),
-          #lurk
-          Cmd(["lurk"], misc.lurk),
-          Cmd(["clearlurk"], misc.clearlurk)
+          #stream
+          Cmd(["uptime"], stream.uptime, cooldown=15),
+          Cmd(["lurk"], stream.lurk),
+          Cmd(["clearlurk"], stream.clearlurk),
+          #Cmd(["clip"], stream.clip)
        ]
 
 def process(bot, user, message):
