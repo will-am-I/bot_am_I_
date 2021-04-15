@@ -13,8 +13,8 @@ def coinflip(bot, user, side=None, bet=1, *args):
    cursor = db.cursor()
    
    try:
-      cursor.execute(f"SELECT coins FROM member_points WHERE twitchid = '{user['id']}'")
-      if int(cursor.fetchone()) > 0:
+      cursor.execute(f"SELECT coins FROM member_rank WHERE twitchid = '{user['id']}'")
+      if int(cursor.fetchone()[0]) > 0:
          if side is None:
             bot.send_message("Select which side you think the coin will land.")
          elif (side := side.lower()) not in (opt := ("h", "t", "heads", "tails")):
@@ -23,11 +23,17 @@ def coinflip(bot, user, side=None, bet=1, *args):
             result = choice(("heads", "tails"))
             
             if side[0] == result[0]:
-               cursor.execute(f"UPDATE member_points SET coins = coins + {bet} WHERE twitchid = {user['id']}")
-               bot.send_message(f"It landed on {result}! You won {bet} coins!")
+               cursor.execute(f"UPDATE member_rank SET coins = coins + {bet} WHERE twitchid = {user['id']}")
+               if int(bet) > 1:
+                  bot.send_message(f"It landed on {result}! You won {bet} coins!")
+               else:
+                  bot.send_message(f"It landed on {result}! You won {bet} coin!")
             else:
-               cursor.execute(f"UPDATE member_points SET coins = coins - {bet} WHERE twitchid = {user['id']}")
-               bot.send_message(f"Sorry, it landed on {result}. You lost {bet} coin.")
+               cursor.execute(f"UPDATE member_rank SET coins = coins - {bet} WHERE twitchid = {user['id']}")
+               if int(bet) > 1:
+                  bot.send_message(f"Sorry, it landed on {result}. You lost {bet} coins.")
+               else:
+                  bot.send_message(f"Sorry, it landed on {result}. You lost {bet} coin.")
       else:
          bot.send_message(f"Sorry, {user['name']}. You need at least 1 coin to play the coinflip. Participate in chat to earn free coins.")
       db.commit()

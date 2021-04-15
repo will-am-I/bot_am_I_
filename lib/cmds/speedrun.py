@@ -46,7 +46,7 @@ def category(bot, user, categoryid=None, subcategoryid1=None, subcategoryid2=Non
                      confirmation += f"{subcategoryname4}, "
                confirmation = f"{confirmation[:-2]})"
 
-            cursor.execute(f"INSERT INTO twitch_category (GameName, GameID, CategoryName, CategoryID, SubcategoryName1, SubcategoryID1, SubcategoryName2, SubcategoryID2, SubcategoryName3, SubcategoryID3, SubcategoryName4, SubcategoryID4) VALUES ('{gamename}', '{gameid}', '{categoryname}', '{categoryid}', '{subcategoryname1}', '{subcategoryid1}', '{subcategoryname2}', '{subcategoryid2}', '{subcategoryname3}', '{subcategoryid3}', '{subcategoryname4}', '{subcategoryid4}')")
+            cursor.execute(f'INSERT INTO twitch_category (gamename, gameid, categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4) VALUES ("{gamename}", "{gameid}", "{categoryname}", "{categoryid}", "{subcategoryname1}", "{subcategoryid1}", "{subcategoryname2}", "{subcategoryid2}", "{subcategoryname3}", "{subcategoryid3}", "{subcategoryname4}", "{subcategoryid4}")')
             db.commit()
             bot.send_message(confirmation)
          else:
@@ -63,20 +63,21 @@ def wr(bot, user, *args):
    cursor = db.cursor()
 
    try:
-      if (game := getGame()).upper() == db.field("SELECT GameName FROM speedrun").upper():
-         cursor.execute("SELECT GameID, CategoryName, CategoryID, SubcategoryName1, SubcategoryID1, SubcategoryName2, SubcategoryID2, SubcategoryName3, SubcategoryID3, SubcategoryName4, SubcategoryID4 FROM speedrun")
-         runinfo = cursor.fetchall()
+      cursor.execute("SELECT gamename FROM twitch_category")
+      if (game := getGame()).upper() == cursor.fetchone()[0].upper():
+         cursor.execute("SELECT gameid, categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4 FROM twitch_category")
+         runinfo = cursor.fetchone()
 
          with urllib.request.urlopen(f'https://www.speedrun.com/api/v1/leaderboards/{runinfo[0]}/category/{runinfo[2]}') as leaderboardjson:
             leaderboard = json.loads(leaderboardjson.read().decode())['data']
          
-         if runinfo[4] is not None:
+         if runinfo[4] != 'None':
             variablecount = 1
-            if runinfo[6] is not None:
+            if runinfo[6] != 'None':
                variablecount += 1
-            if runinfo[8] is not None:
+            if runinfo[8] != 'None':
                variablecount += 1
-            if runinfo[10] is not None:
+            if runinfo[10] != 'None':
                variablecount += 1
 
             records = []
@@ -88,7 +89,7 @@ def wr(bot, user, *args):
                      matchcount += 1
                if matchcount == variablecount:
                   records.append(record)
-            
+                  
             records.sort(key=sortTime)
             currentwr = records[0]
          else:
@@ -109,13 +110,13 @@ def wr(bot, user, *args):
          category = runinfo[1]
          if variablecount > 0:
             category = category + " ("
-            if runinfo[4] is not None:
+            if runinfo[4] != 'None':
                category = category + runinfo[3] + ", "
-            elif runinfo[6] is not None:
+            elif runinfo[6] != 'None':
                category = category + runinfo[5] + ", "
-            elif runinfo[8] is not None:
+            elif runinfo[8] != 'None':
                category = category + runinfo[7] + ", "
-            elif runinfo[10] is not None:
+            elif runinfo[10] != 'None':
                category = category + runinfo[9] + ", "
             category = category[:-2] + ")"
 
@@ -135,9 +136,10 @@ def pb(bot, user, *args):
    cursor = db.cursor()
 
    try:
-      if (game := getGame()).upper() == db.field("SELECT GameName FROM speedrun").upper():
-         cursor.execute("SELECT CategoryName, CategoryID, SubcategoryName1, SubcategoryID1, SubcategoryName2, SubcategoryID2, SubcategoryName3, SubcategoryID3, SubcategoryName4, SubcategoryID4 FROM speedrun")
-         runinfo = cursor.fetchall()
+      cursor.execute("SELECT gamename FROM twitch_category")
+      if (game := getGame()).upper() == cursor.fetchone()[0].upper():
+         cursor.execute("SELECT categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4 FROM twitch_category")
+         runinfo = cursor.fetchone()
 
          variables = []
          hasPB = False
@@ -163,13 +165,13 @@ def pb(bot, user, *args):
          category = runinfo[0]
          if len(variables) > 0:
             category = category + " ("
-            if runinfo[3] is not None:
+            if runinfo[3] != 'None':
                category = category + runinfo[2] + ", "
-            elif runinfo[5] is not None:
+            elif runinfo[5] != 'None':
                category = category + runinfo[4] + ", "
-            elif runinfo[7] is not None:
+            elif runinfo[7] != 'None':
                category = category + runinfo[6] + ", "
-            elif runinfo[9] is not None:
+            elif runinfo[9] != 'None':
                category = category + runinfo[8] + ", "
             category = category[:-2] + ")"
             
@@ -232,4 +234,4 @@ def parseTime(time_to_parse):
    return time
 
 def sortTime(record):
-   return record['run']['times']['primary_t']
+   return int(record['run']['times']['primary_t'])

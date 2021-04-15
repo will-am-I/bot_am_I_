@@ -21,12 +21,15 @@ cmds = [
           Cmd(["coins", "money"], economy.coins),
           #Cmd(["rank"], economy.rank),
           #games
-          Cmd(["coinflip", "flipcoin", "flip"], games.coinflip),
-          #Cmd(["heist"], games.start_heist),
+          Cmd(["coinflip", "flipcoin", "flip"], games.coinflip, cooldown=30),
+          #Cmd(["heist"], games.start_heist, cooldown=300),
           #speedrun
           Cmd(["wr"], speedrun.wr),
           Cmd(["pb"], speedrun.pb),
-          Cmd(["category"], speedrun.category)
+          Cmd(["category"], speedrun.category),
+          #lurk
+          Cmd(["lurk"], misc.lurk),
+          Cmd(["clearlurk"], misc.clearlurk)
        ]
 
 def process(bot, user, message):

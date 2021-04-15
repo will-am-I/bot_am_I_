@@ -3,7 +3,7 @@ from re import search
 from datetime import datetime, timedelta
 from random import randint
 from time import time
-import json, MySQLdb
+import json, MySQLdb, urllib.request, requests
 
 from . import games, misc
 
@@ -38,7 +38,7 @@ def update_records(bot, user):
       cursor.execute(f"UPDATE member_rank SET points = points + 1 WHERE twitchid = {user['id']}")
 
       cursor.execute(f"SELECT DATE_FORMAT(coinlock, '%Y-%m-%d %T') FROM member_rank WHERE twitchid = {user['id']}")
-      stamp = cursor.fetchone()
+      stamp = cursor.fetchone()[0]
       if datetime.strptime(stamp, "%Y-%m-%d %H:%M:%S") < datetime.utcnow():
          coinlock = (datetime.utcnow() + timedelta(seconds=30)).strftime("%Y-%m-%d %H:%M:%S")
          cursor.execute(f"UPDATE member_rank SET coins = coins + {randint(1,5)}, coinlock = STR_TO_DATE('{coinlock}', '%Y-%m-%d %T') WHERE twitchid = {user['id']}")
@@ -56,10 +56,26 @@ def welcome(bot, user):
    cursor = db.cursor()
 
    try:
-      bot.send_message(f"Welcome to the stream {user['name']}!")
-      
-      cursor.execute(f"INSERT IGNORE INTO twitch_users (userid) VALUES ('{user['id']}')")
-      cursor.execute(f"UPDATE twitch_users SET welcomed = NOW() WHERE userid = '{user['id']}'")
+      cursor.execute(f"SELECT * FROM twitch_users WHERE userid = {user['id']}")
+
+      if cursor.rowcount > 0:
+         url = 'https://api.twitch.tv/helix/streams?user_login=will_am_i_'
+         header = {'Client-ID': config['client_id'], 'Authorization': 'Bearer ' + config['twitch_token']}
+         request = urllib.request.Request(url, headers=header)
+         with urllib.request.urlopen(request) as streamurl:
+            streaminfo = json.loads(streamurl.read().decode())
+         if (streaminfo['data']):
+            startTime = datetime.strptime(streaminfo['data'][0]['started_at'][:10] + ' ' + streaminfo['data'][0]['started_at'][11:-1], '%Y-%m-%d %H:%M:%S')
+         
+            cursor.execute(f"SELECT DATE_FORMAT(welcomed, '%Y-%m-%d %T') FROM twitch_users WHERE userid = {user['id']}")
+            stamp = datetime.strptime(cursor.fetchone()[0], '%Y-%m-%d %H:%M:%S')
+            
+            if stamp < startTime:
+               bot.send_message(f"Welcome to the stream {user['name']}!")
+               cursor.execute(f"UPDATE twitch_users SET welcomed = UTC_TIMESTAMP WHERE userid = {user['id']}")
+      else:
+         cursor.execute(f"INSERT INTO twitch_users (userid, welcomed) VALUES ({user['id']}, UTC_TIMESTAMP)")
+         bot.send_message(f"Welcome to the stream {user['name']}!")
 
       db.commit()
    except Exception as e:
