@@ -17,6 +17,7 @@ def process(bot, user, message):
       welcome(bot, user)
       update_records(bot, user)
       check_activity(bot, user)
+      check_timed_messages(bot)
 
       if (match := search(r'cheer[0-9]+', message)) is not None:
          thank_for_cheer(bot, user, match)
@@ -91,6 +92,29 @@ def check_activity(bot, user):
 
    if (count % 50 == 0 and count <= 200) or (count % 500 == 0):
       bot.send_message(f"Thanks for being active in chat, {user['name']}. You've sent {count:,} messages! Keep it up!")
+
+def check_timed_messages(bot):
+   db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
+   cursor = db.cursor()
+
+   try:
+      cursor.execute(f"SELECT messageid, message, messages, min_messages, min_time, DATE_FORMAT(last_sent, '%Y-%m-%d %T') FROM timed_messages")
+      messages = cursor.fetchall()
+
+      for message in messages:
+         if datetime.now() - timedelta(minutes=message[4]) > datetime.strptime(message[5], '%Y-%m-%d %H:%M:%S') and message[2] >= message[3]:
+            bot.send_message(str(message[1]))
+            cursor.execute(f"UPDATE timed_messages SET messages = 0, last_sent = CURRENT_TIMESTAMP WHERE messageid = {message[0]}")
+         else:
+            cursor.execute(f"UPDATE timed_messages SET messages = messages + 1 WHERE messageid = {message[0]}")
+
+      db.commit()
+   except Exception as e:
+      db.rollback()
+      bot.send_message("Error occured checking on timed messages.")
+      print(str(e))
+
+   db.close()
 
 def thank_for_cheer(bot, user, match):
    bot.send_message(f"Thanks for the {match[5:]:,} bitties, {user['name']}! It's much appreciated!")
