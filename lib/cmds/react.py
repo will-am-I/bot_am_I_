@@ -13,6 +13,7 @@ with open('./config.json') as data:
 messages = defaultdict(int)
 
 def process(bot, user, message):
+   print(user)
    if user['id'] != config['streamer']:
       welcome(bot, user)
       update_records(bot, user)
@@ -35,7 +36,7 @@ def update_records(bot, user):
    try:
       cursor.execute(f"UPDATE twitch_users SET messages = messages + 1 WHERE userid = {user['id']}")
 
-      cursor.execute(f"INSERT IGNORE INTO member_rank (twitchid, coins, coinlock) VALUES ({user['id']}, {randint(1,5)}, NOW())")
+      cursor.execute(f"INSERT IGNORE INTO member_rank (twitchname, twitchid, coins, coinlock) VALUES ('{user['name']}', {user['id']}, {randint(1,5)}, NOW())")
       cursor.execute(f"UPDATE member_rank SET points = points + 1 WHERE twitchid = {user['id']}")
 
       cursor.execute(f"SELECT DATE_FORMAT(coinlock, '%Y-%m-%d %T') FROM member_rank WHERE twitchid = {user['id']}")
