@@ -30,7 +30,7 @@ cmds = [
           Cmd(["uptime"], stream.uptime, cooldown=15),
           Cmd(["lurk"], stream.lurk),
           Cmd(["clearlurk"], stream.clearlurk),
-          #Cmd(["clip"], stream.clip)
+          Cmd(["clip"], stream.clip)
        ]
 
 def process(bot, user, message):

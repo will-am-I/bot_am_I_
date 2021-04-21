@@ -21,7 +21,7 @@ def uptime(bot, user, *args):
       bot.send_message(f"Sorry, {user['name']}, but Will isn't live right now.. obviously.. ResidentSleeper")
 
 def clip(bot, user, *args):
-   url = 'https://api.twitch.tv/helix/clips?broadcaster_id='
+   url = 'https://api.twitch.tv/helix/clips?broadcaster_id=158745134'
    header = {'Client-ID': config['client_id'], 'Authorization': 'Bearer ' + config['twitch_token']}
    with request.urlopen(request.Request(url, headers=header, method="POST")) as createjson:
       createinfo = json.loads(createjson.read().decode())
@@ -42,19 +42,6 @@ def clip(bot, user, *args):
       sleep(2)
 
    if clip_created:
-      db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
-      cursor = db.cursor()
-
-      try:
-         cursor.execute(f"INSERT INTO twitch_clips (clipid) VALUES ('{clip_id}')")
-         db.commit()
-      except Exception as e:
-         db.rollback()
-         bot.send_message("Failed sending clip to discord.")
-         print(str(e))
-
-      db.close()
-      
       bot.send_message(clip_url)
    else:
       bot.send_message("Clip creation failed, please try again or create one manually.")
