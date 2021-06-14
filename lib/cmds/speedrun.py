@@ -3,9 +3,9 @@ import urllib.request, json, MySQLdb
 with open('./config.json') as data:
    config = json.load(data)
 
-def category(bot, user, categoryid=None, subcategoryid1=None, subcategoryid2=None, subcategoryid3=None, subcategoryid4=None, *args):
+def category (bot, user, categoryid=None, subcategoryid1=None, subcategoryid2=None, subcategoryid3=None, subcategoryid4=None, *args):
    if user['id'] == config['streamer']:
-      db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
+      db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
       cursor = db.cursor()
       try:
          cursor.execute("DELETE FROM twitch_category")
@@ -58,8 +58,8 @@ def category(bot, user, categoryid=None, subcategoryid1=None, subcategoryid2=Non
 
       db.close()
 
-def wr(bot, user, *args):
-   db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
+def wr (bot, user, *args):
+   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
    cursor = db.cursor()
 
    try:
@@ -131,8 +131,8 @@ def wr(bot, user, *args):
 
    db.close()
 
-def pb(bot, user, *args):
-   db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
+def pb (bot, user, *args):
+   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
    cursor = db.cursor()
 
    try:
@@ -188,6 +188,9 @@ def pb(bot, user, *args):
       print(str(e))
 
    db.close()
+
+def race (bot, user, *args):
+   bot.send_message("Go to https://kadgar.net/live/will_am_i_/30cents to view the race live with both streams!")
 
 def getGame():
    url = 'https://api.twitch.tv/helix/streams?user_login=will_am_i_'

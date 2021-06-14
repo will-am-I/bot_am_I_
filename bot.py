@@ -7,9 +7,10 @@ Some code in this file is licensed under the Apache License, Version 2.0.
 """
 
 from irc.bot import SingleServerIRCBot
+from irc.schedule import DefaultScheduler
 from requests import get
 from lib import cmds
-from lib.cmds import react
+from lib.cmds import react, timers
 import json, urllib.request
 
 with open('./config.json') as data:
@@ -59,4 +60,7 @@ class Bot(SingleServerIRCBot):
 
 if __name__ == "__main__":
    bot = Bot()
+   scheduler = DefaultScheduler()
+
+   scheduler.execute_every(10, timers.check_followers(bot))
    bot.start()

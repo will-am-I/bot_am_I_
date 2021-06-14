@@ -47,7 +47,7 @@ def clip(bot, user, *args):
       bot.send_message("Clip creation failed, please try again or create one manually.")
 
 def lurk(bot, user, *args):
-   db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
+   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
    cursor = db.cursor()
 
    try:
@@ -64,7 +64,7 @@ def lurk(bot, user, *args):
 
 def clearlurk(bot, user, *args):
    if user['id'] == config['streamer']:
-      db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
+      db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
       cursor = db.cursor()
 
       try:

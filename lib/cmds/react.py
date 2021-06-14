@@ -30,14 +30,20 @@ def process(bot, user, message):
             games.end_heist(bot)
 
 def update_records(bot, user):
-   db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
+   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
    cursor = db.cursor()
 
    try:
       cursor.execute(f"UPDATE twitch_users SET messages = messages + 1 WHERE userid = {user['id']}")
 
-      cursor.execute(f"INSERT IGNORE INTO member_rank (twitchname, twitchid, coins, coinlock) VALUES ('{user['name']}', {user['id']}, {randint(1,5)}, NOW())")
-      cursor.execute(f"UPDATE member_rank SET points = points + 1 WHERE twitchid = {user['id']}")
+      cursor.execute(f"SELECT * FROM member_rank WHERE twitchid = {user['id']}")
+
+      if cursor.rowcount > 0:
+         print("existing member")
+         cursor.execute(f"UPDATE member_rank SET points = points + 1 WHERE twitchid = {user['id']}")
+      else:
+         print("new member")
+         cursor.execute(f"INSERT INTO member_rank (twitchname, twitchid, points, coins, coinlock) VALUES ('{user['name']}', {user['id']}, 1, {randint(1,5)}, NOW())")
 
       cursor.execute(f"SELECT DATE_FORMAT(coinlock, '%Y-%m-%d %T') FROM member_rank WHERE twitchid = {user['id']}")
       stamp = cursor.fetchone()[0]
@@ -54,7 +60,7 @@ def update_records(bot, user):
    db.close()
 
 def welcome(bot, user):
-   db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
+   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
    cursor = db.cursor()
 
    try:
@@ -95,7 +101,7 @@ def check_activity(bot, user):
       bot.send_message(f"Thanks for being active in chat, {user['name']}. You've sent {count:,} messages! Keep it up!")
 
 def check_timed_messages(bot):
-   db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
+   db = MySQLdb.connect("localhost", config['databaes_user'], config['database_pass'], config['database_schema'])
    cursor = db.cursor()
 
    try:

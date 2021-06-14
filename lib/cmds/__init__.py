@@ -16,6 +16,9 @@ cmds = [
           Cmd(["hello", "hi", "hey"], misc.hello),
           Cmd(["discord"], misc.discord),
           Cmd(["nsfw"], misc.nsfw),
+          Cmd(["dadjoke"], misc.dadjoke),
+          Cmd(["play"], misc.play),
+          Cmd(["cards"], misc.cards),
           #economy
           Cmd(["coins", "money"], economy.coins),
           #Cmd(["rank"], economy.rank),
@@ -26,6 +29,7 @@ cmds = [
           Cmd(["wr"], speedrun.wr),
           Cmd(["pb"], speedrun.pb),
           Cmd(["category"], speedrun.category),
+          Cmd(["race"], speedrun.race),
           #stream
           Cmd(["uptime"], stream.uptime, cooldown=15),
           Cmd(["lurk"], stream.lurk),
@@ -52,4 +56,4 @@ def perform(bot, user, call, *args):
                bot.send_message(f"Cooldown still in effect. Try again in {cmd.next_use-time():,.0f} seconds.")
             return
 
-      bot.send_message(f"@{user['name']}, \"{call}\" isn't a registered command. NotLikeThis Type !help for a list of commands.")
+      #bot.send_message(f"@{user['name']}, \"{call}\" isn't a registered command. NotLikeThis Type !help for a list of commands.")

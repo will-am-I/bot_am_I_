@@ -9,7 +9,7 @@ heist = None
 heist_lock = time()
 
 def coinflip(bot, user, side=None, bet=1, *args):
-   db = MySQLdb.connect("localhost", "root", config['database_pass'], config['database_schema'])
+   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
    cursor = db.cursor()
    
    try:
