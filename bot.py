@@ -10,7 +10,7 @@ from irc.bot import SingleServerIRCBot
 from irc.schedule import DefaultScheduler
 from requests import get
 from lib import cmds
-from lib.cmds import react, timers
+from lib.cmds import react
 import json, urllib.request
 
 with open('./config.json') as data:
@@ -60,7 +60,4 @@ class Bot(SingleServerIRCBot):
 
 if __name__ == "__main__":
    bot = Bot()
-   scheduler = DefaultScheduler()
-
-   scheduler.execute_every(10, timers.check_followers(bot))
    bot.start()

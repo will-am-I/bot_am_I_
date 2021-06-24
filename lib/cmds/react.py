@@ -28,6 +28,8 @@ def process(bot, user, message):
             games.run_heist(bot)
          elif h.end_time <= time() and h.running:
             games.end_heist(bot)
+   else:
+      update_records(bot, user)
 
 def update_records(bot, user):
    db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
@@ -101,7 +103,7 @@ def check_activity(bot, user):
       bot.send_message(f"Thanks for being active in chat, {user['name']}. You've sent {count:,} messages! Keep it up!")
 
 def check_timed_messages(bot):
-   db = MySQLdb.connect("localhost", config['databaes_user'], config['database_pass'], config['database_schema'])
+   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
    cursor = db.cursor()
 
    try:
