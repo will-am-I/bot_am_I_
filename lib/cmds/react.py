@@ -3,9 +3,9 @@ from re import search
 from datetime import datetime, timedelta
 from random import randint
 from time import time
-import json, MySQLdb, urllib.request, requests
+import json, mysql.connector, urllib.request
 
-from . import games, misc
+from . import games
 
 with open('./config.json') as data:
    config = json.load(data)
@@ -13,7 +13,7 @@ with open('./config.json') as data:
 messages = defaultdict(int)
 
 def process(bot, user, message):
-   print(user)
+   #print(user)
    if user['id'] != config['streamer']:
       welcome(bot, user)
       update_records(bot, user)
@@ -32,13 +32,14 @@ def process(bot, user, message):
       update_records(bot, user)
 
 def update_records(bot, user):
-   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
+   db = mysql.connector.connect(host="localhost", username=config['database_user'], password=config['database_pass'], database=config['database_schema'])
    cursor = db.cursor()
 
    try:
       cursor.execute(f"UPDATE twitch_users SET messages = messages + 1 WHERE userid = {user['id']}")
 
       cursor.execute(f"SELECT * FROM member_rank WHERE twitchid = {user['id']}")
+      _ = cursor.fetchall()
 
       if cursor.rowcount > 0:
          print("existing member")
@@ -62,11 +63,12 @@ def update_records(bot, user):
    db.close()
 
 def welcome(bot, user):
-   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
+   db = mysql.connector.connect(host="localhost", username=config['database_user'], password=config['database_pass'], database=config['database_schema'])
    cursor = db.cursor()
 
    try:
       cursor.execute(f"SELECT * FROM twitch_users WHERE userid = {user['id']}")
+      _ = cursor.fetchall()
 
       if cursor.rowcount > 0:
          url = 'https://api.twitch.tv/helix/streams?user_login=will_am_i_'
@@ -103,7 +105,7 @@ def check_activity(bot, user):
       bot.send_message(f"Thanks for being active in chat, {user['name']}. You've sent {count:,} messages! Keep it up!")
 
 def check_timed_messages(bot):
-   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
+   db = mysql.connector.connect(host="localhost", username=config['database_user'], password=config['database_pass'], database=config['database_schema'])
    cursor = db.cursor()
 
    try:

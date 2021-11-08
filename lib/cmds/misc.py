@@ -48,8 +48,8 @@ def dadjoke(bot, user, *args):
 
    with urllib.request.urlopen(request) as jokeinfo:
       joke = json.loads(jokeinfo.read().decode())
-   
-   bot.send_message(joke['joke'])
+
+   bot.send_message(joke['joke'].replace('\n', ' '))
 
 def play(bot, user, *args):
    if user['id'] == config['streamer']:

@@ -1,4 +1,4 @@
-import json, MySQLdb
+import json, mysql.connector
 from datetime import datetime, timedelta
 from time import time, sleep
 from urllib import request, parse
@@ -17,6 +17,22 @@ def uptime(bot, user, *args):
       uptime = str(datetime.utcnow() - startTime).rsplit('.', 1)[0]
 
       bot.send_message(f"Thanks for asking, {user['name']}. Will has been live for {uptime}.")
+   else:
+      bot.send_message(f"Sorry, {user['name']}, but Will isn't live right now.. obviously.. ResidentSleeper")
+
+def game (bot, user, *args):
+   url = 'https://api.twitch.tv/helix/streams?user_login=will_am_i_'
+   header = {'Client-ID': config['client_id'], 'Authorization': 'Bearer ' + config['twitch_token']}
+   with request.urlopen(request.Request(url, headers=header, method="GET")) as streamurl:
+      streaminfo = json.loads(streamurl.read().decode())
+
+   if streaminfo['data']:
+      gameid = streaminfo['data'][0]['game_id']
+      with request.urlopen(request.Request('https://api.twitch.tv/helix/games?id=' + gameid, headers=header, method="GET")) as gameurl:
+         gameinfo = json.loads(gameurl.read().decode())['data'][0]
+      game = gameinfo['name']
+
+      bot.send_message(f"Will is playing {game}.")
    else:
       bot.send_message(f"Sorry, {user['name']}, but Will isn't live right now.. obviously.. ResidentSleeper")
 
@@ -47,7 +63,7 @@ def clip(bot, user, *args):
       bot.send_message("Clip creation failed, please try again or create one manually.")
 
 def lurk(bot, user, *args):
-   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
+   db = mysql.connector.connect(host="localhost", username=config['database_user'], password=config['database_pass'], database=config['database_schema'])
    cursor = db.cursor()
 
    try:
@@ -64,7 +80,7 @@ def lurk(bot, user, *args):
 
 def clearlurk(bot, user, *args):
    if user['id'] == config['streamer']:
-      db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
+      db = mysql.connector.connect(host="localhost", username=config['database_user'], password=config['database_pass'], database=config['database_schema'])
       cursor = db.cursor()
 
       try:

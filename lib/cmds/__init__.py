@@ -32,6 +32,7 @@ cmds = [
           Cmd(["race"], speedrun.race),
           #stream
           Cmd(["uptime"], stream.uptime, cooldown=15),
+          Cmd(["game"], stream.game),
           Cmd(["lurk"], stream.lurk),
           Cmd(["clearlurk"], stream.clearlurk),
           Cmd(["clip"], stream.clip)

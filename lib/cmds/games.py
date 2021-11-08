@@ -1,6 +1,6 @@
 from random import choice, randint
 from time import time
-import MySQLdb, json
+import mysql.connector, json
 
 with open('./config.json') as data:
    config = json.load(data)
@@ -9,12 +9,13 @@ heist = None
 heist_lock = time()
 
 def coinflip(bot, user, side=None, bet=1, *args):
-   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
+   db = mysql.connector.connect(host="localhost", username=config['database_user'], password=config['database_pass'], database=config['database_schema'])
    cursor = db.cursor()
    
    try:
       cursor.execute(f"SELECT coins FROM member_rank WHERE twitchid = '{user['id']}'")
-      if int(cursor.fetchone()[0]) > 0:
+      coins = cursor.fetchone()[0]
+      if int(coins) > 0:
          if side is None:
             bot.send_message("Select which side you think the coin will land.")
          elif (side := side.lower()) not in (opt := ("h", "t", "heads", "tails")):

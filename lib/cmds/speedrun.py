@@ -1,11 +1,11 @@
-import urllib.request, json, MySQLdb
+import urllib.request, json, mysql.connector
 
 with open('./config.json') as data:
    config = json.load(data)
 
 def category (bot, user, categoryid=None, subcategoryid1=None, subcategoryid2=None, subcategoryid3=None, subcategoryid4=None, *args):
    if user['id'] == config['streamer']:
-      db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
+      db = mysql.connector.connect(host="localhost", username=config['database_user'], password=config['database_pass'], database=config['database_schema'])
       cursor = db.cursor()
       try:
          cursor.execute("DELETE FROM twitch_category")
@@ -59,12 +59,13 @@ def category (bot, user, categoryid=None, subcategoryid1=None, subcategoryid2=No
       db.close()
 
 def wr (bot, user, *args):
-   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
+   db = mysql.connector.connect(host="localhost", username=config['database_user'], password=config['database_pass'], database=config['database_schema'])
    cursor = db.cursor()
 
    try:
       cursor.execute("SELECT gamename FROM twitch_category")
-      if (game := getGame()).upper() == cursor.fetchone()[0].upper():
+      name = cursor.fetchone()[0]
+      if (game := getGame()).upper() == name.upper():
          cursor.execute("SELECT gameid, categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4 FROM twitch_category")
          runinfo = cursor.fetchone()
 
@@ -132,12 +133,13 @@ def wr (bot, user, *args):
    db.close()
 
 def pb (bot, user, *args):
-   db = MySQLdb.connect("localhost", config['database_user'], config['database_pass'], config['database_schema'])
+   db = mysql.connector.connect(host="localhost", username=config['database_user'], password=config['database_pass'], database=config['database_schema'])
    cursor = db.cursor()
 
    try:
       cursor.execute("SELECT gamename FROM twitch_category")
-      if (game := getGame()).upper() == cursor.fetchone()[0].upper():
+      name = cursor.fetchone()[0]
+      if (game := getGame()).upper() == name.upper():
          cursor.execute("SELECT categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4 FROM twitch_category")
          runinfo = cursor.fetchone()
 
@@ -190,7 +192,7 @@ def pb (bot, user, *args):
    db.close()
 
 def race (bot, user, *args):
-   bot.send_message("Go to https://kadgar.net/live/will_am_i_/30cents to view the race live with both streams!")
+   bot.send_message("Go to https://kadgar.net/live/will_am_i_/R4NG3__ to view the race live with both streams!")
 
 def getGame():
    url = 'https://api.twitch.tv/helix/streams?user_login=will_am_i_'
