@@ -10,7 +10,7 @@ from irc.bot import SingleServerIRCBot
 from irc.schedule import DefaultScheduler
 from requests import get
 from lib import cmds
-from lib.cmds import react
+from lib.cmds import messages, react
 import json, urllib.request
 
 with open('./config.json') as data:
@@ -43,6 +43,7 @@ class Bot(SingleServerIRCBot):
       cxn.join(self.CHANNEL)
       self.send_message("Hello Everyone!! HeyGuys")
       print("Now online.")
+      react.start(self)
 
    def on_pubmsg(self, cxn, event):
       tags = {kvpair["key"]: kvpair["value"] for kvpair in event.tags}
@@ -50,7 +51,7 @@ class Bot(SingleServerIRCBot):
       message = event.arguments[0]
 
       if user["name"] != self.USERNAME:
-         react.process(bot, user, message)
+         messages.process(bot, user, message)
          cmds.process(bot, user, message)
 
       print(f"Message from {user['name']}: {message}")
