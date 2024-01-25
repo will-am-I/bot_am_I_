@@ -9,14 +9,20 @@ class SRC(commands.Cog):
 
    @commands.command()
    async def category (self, ctx:commands.Context, categoryid=None, subcategoryid1=None, subcategoryid2=None, subcategoryid3=None, subcategoryid4=None):
-      if ctx.author.id == os.environ['STREAMER_ID']:
-         db = connect(host="localhost", username=os.environ['DB_USER'], password=os.environ['DB_PASS'], database=os.environ['DB_SCHEMA'])
-         cursor = db.cursor()
-         try:
-            cursor.execute("DELETE FROM current_run")
-            db.commit()
+      db = connect(host="localhost", username=os.environ['DB_USER'], password=os.environ['DB_PASS'], database=os.environ['DB_SCHEMA'])
+      cursor = db.cursor()
 
-            if categoryid is not None:
+      try:
+         if ctx.author.id == os.environ['STREAMER_ID']:
+            if categoryid.upper() == "CLEAR":
+               cursor.execute("DELETE FROM current_run")
+               db.commit()
+
+               await ctx.send("Category has been cleared")
+            elif categoryid is not None:
+               cursor.execute("DELETE FROM current_run")
+               db.commit()
+
                with urllib.request.urlopen(f'https://www.speedrun.com/api/v1/categories/{categoryid}') as categoryjson:
                   categoryinfo = json.loads(categoryjson.read().decode())['data']
                categoryname = categoryinfo['name']
@@ -55,13 +61,20 @@ class SRC(commands.Cog):
                db.commit()
                await ctx.send(confirmation)
             else:
-               await ctx.send("Category set to NONE")
-         except Exception as e:
-            db.rollback()
-            await ctx.send(f"Error occurred setting the category.")
-            print(str(e))
+               cursor.execute("SELECT gamename, categoryname, subcategoryname1, subcategoryname2, subcategoryname3, subcategoryname4 FROM current_run")
+               result = cursor.fetchone()[0]
+               await ctx.send(f"Will is currently running {getCategory(result)}")
+         else:
+            cursor.execute("SELECT gamename, categoryname, subcategoryname1, subcategoryname2, subcategoryname3, subcategoryname4 FROM current_run")
+            result = cursor.fetchone()[0]
+            await ctx.send(f"Will is currently running {getCategory(result)}")
 
-         db.close()
+      except Exception as e:
+         db.rollback()
+         await ctx.send(f"Error occurred setting the category.")
+         print(str(e))
+
+      db.close()
 
    @commands.command()
    async def wr (self, ctx:commands.Context):
@@ -71,12 +84,12 @@ class SRC(commands.Cog):
       try:
          cursor.execute("SELECT gamename FROM current_run")
          name = cursor.fetchone()[0]
-         channel = await self.bot.fetch_channels(['will_am_i_'])
-         print(channel)
+         stream = await self.bot.fetch_streams([os.environ['STREAMER_ID']])
+         print(stream)
 
-         if channel is None:
+         if not stream:
             await ctx.send("Will is currently offline.")
-         elif (game := channel.game_name).upper() == name.upper():
+         elif (game := stream[0].game_name).upper() == name.upper():
             cursor.execute("SELECT gameid, categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4 FROM current_run")
             runinfo = cursor.fetchone()
 
@@ -149,11 +162,11 @@ class SRC(commands.Cog):
       try:
          cursor.execute("SELECT gamename FROM current_run")
          name = cursor.fetchone()[0]
-         channel = await self.bot.fetch_channels(['will_am_i_'])
+         stream = await self.bot.fetch_streams([os.environ['STREAMER_ID']])
 
-         if channel is None:
+         if not stream:
             await ctx.send("Will is currently offline.")
-         elif (game := channel.game_name).upper() == name.upper():
+         elif (game := stream[0].game_name).upper() == name.upper():
             cursor.execute("SELECT categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4 FROM current_run")
             runinfo = cursor.fetchone()
 
@@ -227,6 +240,22 @@ class SRC(commands.Cog):
             await ctx.send("Error occurred when getting the race url.")
             print(str(e))
          db.close()
+
+def getCategory(data):
+   category = f"{data['gamename']} - {data['categoryname']}"
+
+   if data['subcategory1'] is not None:
+      category += f" ({data['subcategory1']}"
+      if data['subcategory2'] is not None:
+         category += f", {data['subcategory2']}"
+         if data['subcategory3'] is not None:
+            category += f", {data['subcategory3']}"
+            if data['subcategory4'] is not None:
+               category += f", {data['subcategory4']}"
+      category += ")"
+
+   return category
+
 
 def parseTime(time_to_parse):
    sec, ms = divmod(time_to_parse * 100, 100)
