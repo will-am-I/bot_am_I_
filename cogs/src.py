@@ -1,4 +1,5 @@
-import urllib.request, json, mysql.connector, os, twitchio, typing, validators
+import urllib.request, json, os, twitchio, typing, validators
+from mysql.connector import connect
 from twitchio.ext import commands
 
 class SRC(commands.Cog):
@@ -9,7 +10,7 @@ class SRC(commands.Cog):
    @commands.command()
    async def category (self, ctx:commands.Context, categoryid=None, subcategoryid1=None, subcategoryid2=None, subcategoryid3=None, subcategoryid4=None):
       if ctx.author.id == os.environ['STREAMER_ID']:
-         db = mysql.connector.connect(host="localhost", username=os.environ['DB_USER'], password=os.environ['DB_PASS'], database=os.environ['DB_SCHEMA'])
+         db = connect(host="localhost", username=os.environ['DB_USER'], password=os.environ['DB_PASS'], database=os.environ['DB_SCHEMA'])
          cursor = db.cursor()
          try:
             cursor.execute("DELETE FROM current_run")
@@ -50,7 +51,7 @@ class SRC(commands.Cog):
                         confirmation += f"{subcategoryname4}, "
                   confirmation = f"{confirmation[:-2]})"
 
-               cursor.execute(f'INSERT INTO twitch_category (gamename, gameid, categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4) VALUES ("{gamename}", "{gameid}", "{categoryname}", "{categoryid}", "{subcategoryname1}", "{subcategoryid1}", "{subcategoryname2}", "{subcategoryid2}", "{subcategoryname3}", "{subcategoryid3}", "{subcategoryname4}", "{subcategoryid4}")')
+               cursor.execute(f'INSERT INTO current_run (gamename, gameid, categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4) VALUES ("{gamename}", "{gameid}", "{categoryname}", "{categoryid}", "{subcategoryname1}", "{subcategoryid1}", "{subcategoryname2}", "{subcategoryid2}", "{subcategoryname3}", "{subcategoryid3}", "{subcategoryname4}", "{subcategoryid4}")')
                db.commit()
                await ctx.send(confirmation)
             else:
@@ -64,7 +65,7 @@ class SRC(commands.Cog):
 
    @commands.command()
    async def wr (self, ctx:commands.Context):
-      db = mysql.connector.connect(host="localhost", username=os.environ['DB_USER'], password=os.environ['DB_PASS'], database=os.environ['DB_SCHEMA'])
+      db = connect(host="localhost", username=os.environ['DB_USER'], password=os.environ['DB_PASS'], database=os.environ['DB_SCHEMA'])
       cursor = db.cursor()
 
       try:
@@ -76,7 +77,7 @@ class SRC(commands.Cog):
          if channel is None:
             await ctx.send("Will is currently offline.")
          elif (game := channel.game_name).upper() == name.upper():
-            cursor.execute("SELECT gameid, categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4 FROM twitch_category")
+            cursor.execute("SELECT gameid, categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4 FROM current_run")
             runinfo = cursor.fetchone()
 
             with urllib.request.urlopen(f'https://www.speedrun.com/api/v1/leaderboards/{runinfo[0]}/category/{runinfo[2]}') as leaderboardjson:
@@ -142,7 +143,7 @@ class SRC(commands.Cog):
 
    @commands.command()
    async def pb (self, ctx:commands.Context):
-      db = mysql.connector.connect(host="localhost", username=os.environ['DB_USER'], password=os.environ['DB_PASS'], database=os.environ['DB_SCHEMA'])
+      db = connect(host="localhost", username=os.environ['DB_USER'], password=os.environ['DB_PASS'], database=os.environ['DB_SCHEMA'])
       cursor = db.cursor()
 
       try:
@@ -153,7 +154,7 @@ class SRC(commands.Cog):
          if channel is None:
             await ctx.send("Will is currently offline.")
          elif (game := channel.game_name).upper() == name.upper():
-            cursor.execute("SELECT categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4 FROM twitch_category")
+            cursor.execute("SELECT categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4 FROM current_run")
             runinfo = cursor.fetchone()
 
             variables = []
@@ -205,7 +206,7 @@ class SRC(commands.Cog):
    @commands.command()
    async def race (self, ctx:commands.Context, url:typing.Optional[twitchio.PartialChatter]):
       if ctx.author.id == os.environ['STREAMER_ID'] and url is not None and validators.url(url):
-         db = mysql.connector.connect(host="localhost", username=os.environ['DB_USER'], password=os.environ['DB_PASS'], database=os.environ['DB_SCHEMA'])
+         db = connect(host="localhost", username=os.environ['DB_USER'], password=os.environ['DB_PASS'], database=os.environ['DB_SCHEMA'])
          cursor = db.cursor()
          try:
             cursor.execute(f"UPDATE current_run SET raceurl = {url}")
@@ -216,7 +217,7 @@ class SRC(commands.Cog):
             print(str(e))
          db.close()
       else:
-         db = mysql.connector.connect(host="localhost", username=os.environ['DB_USER'], password=os.environ['DB_PASS'], database=os.environ['DB_SCHEMA'])
+         db = connect(host="localhost", username=os.environ['DB_USER'], password=os.environ['DB_PASS'], database=os.environ['DB_SCHEMA'])
          cursor = db.cursor()
          try:
             cursor.execute(f"SELECT raceurl FROM current_run")
