@@ -9,19 +9,30 @@ class Bot(commands.Bot):
             self.load_module(f'cogs.{filename[:-3]}')
 
    async def event_ready(self):
-      print(f'Logged in as | {self.nick}')
-      print(f'User id is | {self.user_id}')
+      print('Online')
 
-   async def event_message(self, message):
-      if message.echo:
-         return
-      
-      print(message.content)
-      await self.handle_commands(message)
+   async def event_command_error(self, ctx:commands.Context, error:Exception):
+         print(error)
+         await ctx.send("You done messed up A-A-ron!")
 
    @commands.command()
-   async def hello(self, ctx:commands.Context):
-      await ctx.send(f'Hello, {ctx.author.name}!')
+   async def load(self, ctx:commands.Context, module:str):
+      if ctx.author.id == os.environ['STREAMER_ID']:
+         self.load_module(f"cogs.{module}")
+         await ctx.send(f"{module} has been loaded.")
+         
+   @commands.command()
+   async def unload(self, ctx:commands.Context, module:str):
+      if ctx.author.id == os.environ['STREAMER_ID']:
+         self.unload_module(f"cogs.{module}")
+         await ctx.send(f"{module} has been unloaded.")
+         
+   @commands.command()
+   async def reload(self, ctx:commands.Context, module:str):
+      if ctx.author.id == os.environ['STREAMER_ID']:
+         self.unload_module(f"cogs.{module}")
+         self.load_module(f"cogs.{module}")
+         await ctx.send(f"{module} has been reloaded.")
 
 bot = Bot()
 bot.run()
