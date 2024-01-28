@@ -15,57 +15,60 @@ class SRC(commands.Cog):
       try:
          online = await self.bot.fetch_streams([os.environ['STREAMER_ID']])
 
-         if not online:
-            await ctx.send("Will is currently offline.")
-         else:
-            if ctx.author.id == os.environ['STREAMER_ID']:
-               if categoryid is not None:
-                  cursor.execute("DELETE FROM current_run")
-                  if categoryid.upper() == "CLEAR":
-                     db.commit()
-                     await ctx.send("Category has been cleared")
-                  else:
-                     with urllib.request.urlopen(f'https://www.speedrun.com/api/v1/categories/{categoryid}') as categoryjson:
-                        categoryinfo = json.loads(categoryjson.read().decode())['data']
-                     categoryname = categoryinfo['name']
+         if ctx.author.id == os.environ['STREAMER_ID']:
+            if categoryid is not None:
+               cursor.execute("DELETE FROM current_run")
+               if categoryid.upper() == "CLEAR":
+                  await ctx.send("Category has been cleared")
+               else:
+                  with urllib.request.urlopen(f'https://www.speedrun.com/api/v1/categories/{categoryid}') as categoryjson:
+                     categoryinfo = json.loads(categoryjson.read().decode())['data']
+                  categoryname = categoryinfo['name']
 
-                     with urllib.request.urlopen(categoryinfo['links'][1]['uri']) as gamejson:
-                        gameinfo = json.loads(gamejson.read().decode())['data']
-                     gamename = gameinfo['names']['twitch']
-                     gameid = gameinfo['id']
+                  with urllib.request.urlopen(categoryinfo['links'][1]['uri']) as gamejson:
+                     gameinfo = json.loads(gamejson.read().decode())['data']
+                  gamename = gameinfo['names']['twitch']
+                  gameid = gameinfo['id']
 
-                     confirmation = f"Category set to {gamename} - {categoryname}"
+                  confirmation = f"Category set to {gamename} - {categoryname}"
 
-                     subcategoryname1 = None
-                     subcategoryname2 = None
-                     subcategoryname3 = None
-                     subcategoryname4 = None
-                     if subcategoryid1 is not None:
-                        confirmation += " ("
-                        with urllib.request.urlopen(f'https://www.speedrun.com/api/v1/categories/{categoryid}/variables') as variablesjson:
-                           variablesinfo = json.loads(variablesjson.read().decode())['data']
-                        for variable in variablesinfo:
-                           if subcategoryid1 in variable['values']['values']:
-                              subcategoryname1 = variable['values']['values'][subcategoryid1]['label']
-                              confirmation += f"{subcategoryname1}, "
-                           if subcategoryid2 is not None and subcategoryid2 in variable['values']['values']:
-                              subcategoryname2 = variable['values']['values'][subcategoryid2]['label']
-                              confirmation += f"{subcategoryname2}, "
-                           if subcategoryid3 is not None and subcategoryid3 in variable['values']['values']:
-                              subcategoryname3 = variable['values']['values'][subcategoryid3]['label']
-                              confirmation += f"{subcategoryname3}, "
-                           if subcategoryid4 is not None and subcategoryid4 in variable['values']['values']:
-                              subcategoryname4 = variable['values']['values'][subcategoryid4]['label']
-                              confirmation += f"{subcategoryname4}, "
-                        confirmation = f"{confirmation[:-2]})"
+                  subcategoryname1 = None
+                  subcategoryname2 = None
+                  subcategoryname3 = None
+                  subcategoryname4 = None
+                  if subcategoryid1 is not None:
+                     confirmation += " ("
+                     with urllib.request.urlopen(f'https://www.speedrun.com/api/v1/categories/{categoryid}/variables') as variablesjson:
+                        variablesinfo = json.loads(variablesjson.read().decode())['data']
+                     for variable in variablesinfo:
+                        if subcategoryid1 in variable['values']['values']:
+                           subcategoryname1 = variable['values']['values'][subcategoryid1]['label']
+                           confirmation += f"{subcategoryname1}, "
+                        if subcategoryid2 is not None and subcategoryid2 in variable['values']['values']:
+                           subcategoryname2 = variable['values']['values'][subcategoryid2]['label']
+                           confirmation += f"{subcategoryname2}, "
+                        if subcategoryid3 is not None and subcategoryid3 in variable['values']['values']:
+                           subcategoryname3 = variable['values']['values'][subcategoryid3]['label']
+                           confirmation += f"{subcategoryname3}, "
+                        if subcategoryid4 is not None and subcategoryid4 in variable['values']['values']:
+                           subcategoryname4 = variable['values']['values'][subcategoryid4]['label']
+                           confirmation += f"{subcategoryname4}, "
+                     confirmation = f"{confirmation[:-2]})"
 
-                     cursor.execute(f'INSERT INTO current_run (gamename, gameid, categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4) VALUES ("{gamename}", "{gameid}", "{categoryname}", "{categoryid}", "{subcategoryname1}", "{subcategoryid1}", "{subcategoryname2}", "{subcategoryid2}", "{subcategoryname3}", "{subcategoryid3}", "{subcategoryname4}", "{subcategoryid4}")')
-                     db.commit()
-                     await ctx.send(confirmation)
+                  cursor.execute(f'INSERT INTO current_run (gamename, gameid, categoryname, categoryid, subcategoryname1, subcategoryid1, subcategoryname2, subcategoryid2, subcategoryname3, subcategoryid3, subcategoryname4, subcategoryid4) VALUES ("{gamename}", "{gameid}", "{categoryname}", "{categoryid}", "{subcategoryname1}", "{subcategoryid1}", "{subcategoryname2}", "{subcategoryid2}", "{subcategoryname3}", "{subcategoryid3}", "{subcategoryname4}", "{subcategoryid4}")')
+                  await ctx.send(confirmation)
+                  
+               db.commit()
+            else:
+               if not online:
+                  await ctx.send("Will is currently offline.")
                else:
                   cursor.execute("SELECT gamename, categoryname, subcategoryname1, subcategoryname2, subcategoryname3, subcategoryname4 FROM current_run")
                   result = cursor.fetchone()[0]
                   await ctx.send(f"Will is currently running {getCategory(result)}")
+         else:
+            if not online:
+               await ctx.send("Will is currently offline.")
             else:
                cursor.execute("SELECT gamename, categoryname, subcategoryname1, subcategoryname2, subcategoryname3, subcategoryname4 FROM current_run")
                result = cursor.fetchone()[0]
